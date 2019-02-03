@@ -11,4 +11,5 @@ class GD(BaseAlgo):
         return init_x
 
     def update_step(self, x):
+            self.plot_i += 1
             return x - self.lr*self.f.grad(x)

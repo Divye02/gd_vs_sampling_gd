@@ -25,6 +25,8 @@ class F:
         return np.array(self.fn(x[0], x[1]))
 
     def grad(self, x):
+        if len(x.shape) > 1:
+            return np.array([self.grad_fn(x_i[0], x_i[1]) for x_i in x])
         return np.array(self.grad_fn(x[0], x[1]))
 
 

@@ -26,24 +26,28 @@ class BaseAlgo:
     def update_step(self, x):
         pass
 
+    def ret_val(self, x):
+        return x
+
     def evaluate(self, steps=1000):
         fig, ax = plot_contour_x(self.f, self.range_x)
-        x = self.get_init()
+        x, plot_x = self.get_init()
         x_dim = 2
-        x_p = x.reshape(x_dim, -1)
-        ax.plot(x_p[0], x_p[1], 'bo', color=self.sorted_names[self.plot_i % len(self.sorted_names)])
+        plot_x = plot_x.reshape(x_dim, -1)
+        ax.plot(plot_x[0], plot_x[1], 'bo', color=self.sorted_names[self.plot_i % len(self.sorted_names)])
         # ax.annotate('', (x_p[0], x_p[1]), (x_p[0]+self.dx[0], x_p[1]+self.dx[1]))
 
         for i in range(0, steps):
-            x = self.update_step(x)
-            x_p = x.reshape(x_dim, -1)
-            ax.plot(x_p[0], x_p[1], 'bo', color=self.sorted_names[self.plot_i % len(self.sorted_names)])
+            x, plot_x = self.update_step(x)
+            plot_x = plot_x.reshape(x_dim, -1)
+            # print(self.plot_i)
+            ax.plot(plot_x[0], plot_x[1], 'bo', color=self.sorted_names[self.plot_i % len(self.sorted_names)])
             # ax.annotate(str(i+1), (x[0], x[1]), (x[0] + self.dx[0], x[1] + self.dx[1]))
 
         if self.plot:
             plt.show()
 
-        return x
+        return self.ret_val(x)
 
 
 

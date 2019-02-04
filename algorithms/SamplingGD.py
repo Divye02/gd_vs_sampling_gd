@@ -1,6 +1,6 @@
 from algorithms.base_algo import BaseAlgo
 import numpy as np
-
+from util import plot_gaussian_contour
 
 class SamplingGD(BaseAlgo):
     def __init__(self, f, lr, plot, num_samples=10, resample_step=10, kappa=0.1, epsilon=0.9):
@@ -10,18 +10,33 @@ class SamplingGD(BaseAlgo):
         self.kappa = kappa
         self.epsilon = epsilon
 
-    def get_init(self, x_dim=2):
+    def get_init(self, x_dim=2, range_x=[[-1, 1], [-1, 1]]):
         self.update_count = 0
-        self.mean = np.random.random(x_dim)/2
-        cov = np.random.random((x_dim, x_dim))/2
+        # self.mean = np.random.random(x_dim) * [range_x[0][1] - range_x[0][0], range_x[1][1] - range_x[1][0]] + [range_x[0][0], range_x[1][0]]
+        self.mean = np.array([1, 1])
+        cov = np.zeros((x_dim, x_dim))
+        rand_n1 = np.random.random()
+        rand_n2 = np.random.random()
+        cov[0][0] = rand_n1
+        cov[1][1] = rand_n1
+        cov[0][1] = rand_n2
+        cov[1][0] = rand_n2
+        # self.cov = np.dot(cov, np.transpose(cov))
+        self.cov = cov
         self.cov = np.dot(cov, np.transpose(cov))
+        print("Sampling GD", self.mean)
+        print("Sampling GD", self.cov)
+        # plot_gaussian_contour(self.mean, self.cov, self.sorted_names[self.plot_i % len(self.sorted_names)])
+        x_samples = np.clip(np.random.multivariate_normal(self.mean, self.cov, self.num_samples), range_x[0][0], range_x[0][1])
+        return x_samples, self.mean
 
-        return np.random.multivariate_normal(self.mean, self.cov, self.num_samples)
+    def ret_val(self, x):
+        return self.mean
 
     def update_step(self, x):
-        x = x - self.lr * self.f.grad(x)
-        if (self.update_count + 1) % 10 == 0:
-            print(self.mean)
+        x_new = x - self.lr * self.f.grad(x)
+        if (self.update_count + 1) % self.resample_step == 0:
+            # print(self.mean)
             self.plot_i += 1
             # calculate weights of the samples
             weight_samples = np.array([np.exp(-(1.0 / self.kappa) * self.f.val(x_i)) for x_i in x])
@@ -35,6 +50,7 @@ class SamplingGD(BaseAlgo):
                 np.array([weight_samples[i] * (x_i - self.mean).reshape(-1, 1) @ (x_i - self.mean).reshape(1, -1) for i, x_i in enumerate(x)]), axis=0) + (
                                1 - self.epsilon) * self.cov
             # sample x
-            return np.random.multivariate_normal(self.mean, self.cov, self.num_samples)
+            # plot_gaussian_contour(self.mean, self.cov, self.sorted_names[self.plot_i % len(self.sorted_names)])
+            x_new = np.random.multivariate_normal(self.mean, self.cov, self.num_samples)
         self.update_count += 1
-        return x
+        return x_new, self.mean
